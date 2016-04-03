@@ -1,28 +1,44 @@
 #include <sys/types.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <wait.h>
 #include <errno.h>
 #include "shell.h"
 
+#define DEBUG
 char *infile, *outfile, *appfile;
 struct command cmds[MAXCMDS];
 char bkgrnd;
+
+void backgroundExecute(pid_t pid) {
+    static pid_t bkgrndProcesses[1000];
+    static size_t backgroundCounter = 0;
+    bkgrndProcesses[backgroundCounter++] = pid;
+    fprintf(stderr, "Running [%lu] %d\n", backgroundCounter, pid);
+}
 
 /*Smart Error handler is needed!!1*/
 void execute(size_t arg_number) {
     pid_t pid = fork();
 
-/*if fork() was failed*/
+    /*if fork() was failed*/
     if (pid == -1) {
         perror(NULL);
         return;
     } 
 
-/*check current process: parent or children*/
+    /*check current process: parent or children*/
     if (!pid) {
         exit(execvp(cmds[arg_number].cmdargs[arg_number], cmds[arg_number].cmdargs));
     } else {
+        /*Correct comand name check!!!11*/
+        if (bkgrnd) { 
+            kill(pid, 20);
+            backgroundExecute(pid);
+            return;
+        }
+
         int status = 0;
         waitpid(pid, &status, 0);
         waitStatusHandler(status);
@@ -36,7 +52,6 @@ int main(int argc, char *argv[]) {
     char prompt[200];      /* shell prompt */
 
     /* PLACE SIGNAL CODE HERE */
-    printf("current argv[0] = %s\n", argv[0]);
     sprintf(prompt,"[%s] >", argv[0]);
 
     while (promptline(prompt, line, sizeof(line)) > 0) {
@@ -50,7 +65,7 @@ int main(int argc, char *argv[]) {
                     fprintf(stderr, "cmd[%d].cmdargs[%d] = %s\n",
                             i, j, cmds[i].cmdargs[j]);
                 fprintf(stderr, "cmds[%d].cmdflag = %o\n", i,
-                        s[i].cmdflag);
+                        cmds[i].cmdflag);
             }
         }
 #endif

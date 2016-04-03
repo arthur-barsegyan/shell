@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <wait.h>
 #include <errno.h>
 
