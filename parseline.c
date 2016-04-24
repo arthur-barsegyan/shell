@@ -14,7 +14,7 @@ static void leftMove(char *s);
     printf("\n"); \
 } \
 
-int parseline(char *line) {
+int parseline(char *line, struct parserData *data) {
     int nargs, ncmds;
     register char *s;
     char aflg = 0;
@@ -123,7 +123,8 @@ int parseline(char *line) {
         }
     }
 
-    return(rval);
+    data->nargs = nargs;
+    return rval;
 }
 
 static char *blankskip(register char *s) {

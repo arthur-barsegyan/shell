@@ -1,14 +1,16 @@
+#include "shell.h"
+#include "shellexecute.h"
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include "shell.h"
 
-int promptline(char *prompt, char *line, int sizline)
-{
+int promptline(char *prompt, char *line, int sizline) {
     int n = 0;
 
     /*write to stdout path to current directory*/
     write(1, prompt, strlen(prompt));
+    updateShellProcessesState();
     while (1) {
         /*write from stdin to default buffer*/
         n += read(0, (line + n), sizline-n);
