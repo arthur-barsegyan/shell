@@ -8,9 +8,9 @@
 int promptline(char *prompt, char *line, int sizline) {
     int n = 0;
 
-    /*write to stdout path to current directory*/
-    write(1, prompt, strlen(prompt));
     updateShellProcessesState();
+    /* Write to stdout path to current directory */
+    write(1, prompt, strlen(prompt));
     while (1) {
         /*write from stdin to default buffer*/
         n += read(0, (line + n), sizline-n);

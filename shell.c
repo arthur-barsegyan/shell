@@ -15,8 +15,6 @@
 #include <unistd.h>
 #include <string.h>
 
-typedef void (*sighandler_t)(int);
-//#define DEBUG
 char *infile, *outfile, *appfile;
 struct command cmds[MAXCMDS];
 struct termios shell_tmodes;
@@ -130,6 +128,14 @@ void redirectToFile() {
 	}	
 }
 
+
+void closeHandler() {
+    /* We need this handler because if process was dead in background,
+     * SIGCHLD signal help us save exit status in process table. We
+     * may know about this only if calling waitpid(). Then this function
+     * return for us pid our dead process */
+}
+
 void execute(size_t arg_number, size_t nargs) {
     int state = shellCommands(arg_number, nargs);
     if (state >= 0) return;
@@ -173,8 +179,9 @@ int main(int argc, char *argv[]) {
     struct parserData data;
 
     shellInit();
-    //signal(SIGCHLD, &childSignalHandler);
-    printf("Welcome to IH8MaZaHaKa shell v.0.5\n");
+    signal(SIGCHLD, &closeHandler);
+
+    printf("Welcome to IH8MaZaHaKa shell v.0.6\n");
     sprintf(prompt,"[%s] >", argv[0]);
 
     while (promptline(prompt, line, sizeof(line)) > 0) {
@@ -182,7 +189,6 @@ int main(int argc, char *argv[]) {
             continue;   /* read next line */
 
         for (i = 0; i < ncmds; i++) {
-//           printf("Current string = %s\n", cmds[i].cmdargs[0]);
             execute(i, data.nargs); 
             //infile = outfile = appfile = NULL;
         }

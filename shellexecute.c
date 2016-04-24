@@ -30,6 +30,7 @@ static void handleForegroundProcess(pid_t pid);
 static void handleBackgroundProcess(pid_t pid, int cont);
 static void setProcessState(pid_t pid, enum processState state);
 static int getProcessState(pid_t pid);
+static shellProcess *getProcessByPid(int pid);
 static pid_t getLastProcessPid();
 
 static shellProcessManager *shellProcManager = NULL;
@@ -48,11 +49,11 @@ void printList() {
 
 /* Format information about job status for the user to look at  */
 void printTaskInfo (shellProcess *task, const char *status) {
-	fprintf (stderr, "%ld (%s): %s\n", (long)task->pid, status, task->name);
+	fprintf (stderr, "[%lu]\t%s\t\t%s\n", task->number, status, task->name);
 }
 
 static void removeTask(shellProcess *uselessTask) {
-	if (!shellProcManager || !shellProcManager->length)
+	if (!shellProcManager || !shellProcManager->length || !uselessTask)
 		return;
 
 	shellProcess *prevTask = shellProcManager->shellProcessList;
@@ -113,9 +114,9 @@ void updateShellProcessesState() {
     int status;
     pid_t pid;
 
-    do {
+    do
         pid = waitpid (WAIT_ANY, &status, WUNTRACED | WNOHANG);
-    } while (!refreshProcessStatus(pid, status));
+    while (!refreshProcessStatus(pid, status));
 }
 
 static size_t getMaxProcessNumber() {
@@ -344,7 +345,7 @@ static void handleForegroundProcess(pid_t pid) {
         tcgetattr(STDIN_FILENO, &pos->tmodes);
         pos->changeTModes = 1;
         setProcessState(pid, Stopped);
-    } else /* If current foreground process exited */
+    } else  /* If current foreground process exited */
         removeLastProcess();
     /* Put the shell back in the foreground and getting back to 
      * terminal original modes */
